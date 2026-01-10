@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>Welcome to the Invoice Billing System</h1>
+    <form action="/submit" method="post">
+        <label for="invoiceNumber">Invoice Number:</label>
+        <input type="text" id="invoiceNumber" name="invoiceNumber" required>
+        <br>
+        <label for="amount">Amount:</label>
+        <input type="number" id="amount" name="amount" required>
+        <br>
+        <button type="submit">Submit</button>
+    </form>
+    <div id="responseMessage"></div>
+</body>
+<script>
+    let form = document.querySelector('form');
+    let responseMessage = document.getElementById('responseMessage');
+    form.addEventListener('submit', function(event) {
+        event.preventDefault();
+        let invoiceNumber = document.getElementById('invoiceNumber').value;
+        let amount = document.getElementById('amount').value;
+        console.log('Invoice Number:', invoiceNumber);
+        console.log('Amount:', amount);
+        fetch('http://localhost:3000/sample-router/sample', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ invoiceNumber, amount })
+        })
+        .then(response => {
+            console.log('Fetch response status:', response.status);
+            if(!response.ok){
+                throw new Error('Network response was not ok');
+            } 
+            return response.json();
+        })
+        .then(data => {
+            console.log('Fetch data:', data);
+            responseMessage.innerText = data.message;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            responseMessage.innerText = 'Error submitting form.';
+        });
+    });
+</script>
+</html>
