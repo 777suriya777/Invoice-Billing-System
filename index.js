@@ -1,6 +1,7 @@
 require('dotenv').config({override: true});
 const express = require('express');
 const authRouter = require('./auth-routes.js');
+const invoiceRouter = require('./invoice-routes.js');
 const cors = require('cors');
 
 const port = process.env.PORT || 3000;
@@ -19,6 +20,8 @@ app.get('/health', (req, res) => {
 
 // Mount auth routes (public)
 app.use('/auth', authRouter);
+
+app.use('/invoices', invoiceRouter);
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
