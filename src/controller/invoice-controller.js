@@ -1,5 +1,6 @@
-const memoryStore = require('./memory-store');
+const memoryStore = require('../../memory-store');
 const { v4: uuidv4 } = require('uuid');
+const {calculateInvoiceAmounts} = require('../utils/Math.js')
 
 // Helper to initialize and return the invoices array in memory store
 function _getInvoicesArray() {
@@ -34,54 +35,6 @@ async function getInvoice(req, res) {
   }
 
   res.json(invoice);
-}
-
-// Utility: round to 2 decimal places (safe for currency)
-function _roundTwo(value) {
-  return Math.round((Number(value) + Number.EPSILON) * 100) / 100;
-}
-
-// Calculate items amounts, subtotal, taxAmount and total. Throws Error when validation fails.
-function calculateInvoiceAmounts(items, taxRate) {
-  if (!Array.isArray(items) || items.length === 0) {
-    throw new Error('items_required');
-  }
-
-  const computedItems = items.map((item, index) => {
-    const itemCode = item.itemCode;
-    const itemName = item.itemName || '';
-
-    const unitPrice = Number(item.unitPrice);
-    const quantity = Number(item.quantity);
-
-    if (!Number.isFinite(unitPrice) || unitPrice < 0) {
-      throw new Error(`invalid_unitPrice:${itemCode}:${itemName}`);
-    }
-
-    if (!Number.isFinite(quantity) || quantity <= 0) {
-      throw new Error(`invalid_quantity:${itemCode}:${itemName}`);
-    }
-
-    const amount = _roundTwo(unitPrice * quantity);
-
-    return {
-      ...item,
-      unitPrice: _roundTwo(unitPrice),
-      quantity,
-      amount
-    };
-  });
-
-  const subtotal = _roundTwo(computedItems.reduce((s, it) => s + it.amount, 0));
-  const taxAmount = _roundTwo(subtotal * (taxRate / 100));
-  const total = _roundTwo(subtotal + taxAmount);
-
-  return {
-    items: computedItems,
-    subtotal,
-    taxAmount,
-    total
-  };
 }
 
 // POST /invoices - create an invoice tied to the authenticated user's email with server-side ID

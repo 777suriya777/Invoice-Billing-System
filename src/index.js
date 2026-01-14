@@ -1,7 +1,7 @@
 require('dotenv').config({override: true});
 const express = require('express');
-const authRouter = require('./auth-routes.js');
-const invoiceRouter = require('./invoice-routes.js');
+const authRouter = require('./routes/auth-routes.js');
+const invoiceRouter = require('./routes/invoice-routes.js');
 const cors = require('cors');
 
 const port = process.env.PORT || 3000;
