@@ -1,10 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const authenticateUser = require('./auth-middleware');
-const { getInvoices, getInvoice, createInvoice } = require('./invoice-controller');
+const { getInvoices, getInvoice, createInvoice, updateInvoice, changeStatus } = require('./invoice-controller');
 
 router.get('/', authenticateUser, getInvoices);
 router.get('/:id', authenticateUser, getInvoice);
 router.post('/', authenticateUser, createInvoice);
+router.put('/:id', authenticateUser, updateInvoice);
+router.patch('/:id/status', authenticateUser, changeStatus);
 
 module.exports = router;

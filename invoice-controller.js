@@ -36,65 +36,201 @@ async function getInvoice(req, res) {
   res.json(invoice);
 }
 
+// Utility: round to 2 decimal places (safe for currency)
+function _roundTwo(value) {
+  return Math.round((Number(value) + Number.EPSILON) * 100) / 100;
+}
+
+// Calculate items amounts, subtotal, taxAmount and total. Throws Error when validation fails.
+function calculateInvoiceAmounts(items, taxRate) {
+  if (!Array.isArray(items) || items.length === 0) {
+    throw new Error('items_required');
+  }
+
+  const computedItems = items.map((item, index) => {
+    const itemCode = item.itemCode;
+    const itemName = item.itemName || '';
+
+    const unitPrice = Number(item.unitPrice);
+    const quantity = Number(item.quantity);
+
+    if (!Number.isFinite(unitPrice) || unitPrice < 0) {
+      throw new Error(`invalid_unitPrice:${itemCode}:${itemName}`);
+    }
+
+    if (!Number.isFinite(quantity) || quantity <= 0) {
+      throw new Error(`invalid_quantity:${itemCode}:${itemName}`);
+    }
+
+    const amount = _roundTwo(unitPrice * quantity);
+
+    return {
+      ...item,
+      unitPrice: _roundTwo(unitPrice),
+      quantity,
+      amount
+    };
+  });
+
+  const subtotal = _roundTwo(computedItems.reduce((s, it) => s + it.amount, 0));
+  const taxAmount = _roundTwo(subtotal * (taxRate / 100));
+  const total = _roundTwo(subtotal + taxAmount);
+
+  return {
+    items: computedItems,
+    subtotal,
+    taxAmount,
+    total
+  };
+}
+
 // POST /invoices - create an invoice tied to the authenticated user's email with server-side ID
 async function createInvoice(req, res) {
   const userEmail = req.user && req.user.email;
-  //Tax Rate is hadcoded temporarily
-  const taxRate = 7;
+  // Determine tax rate from env (DEFAULT_TAX_RATE) with a safe fallback to 7
+  const envTaxRate = Number(process.env.DEFAULT_TAX_RATE);
+  const taxRate = Number.isFinite(envTaxRate) ? envTaxRate : 7;
 
   if (!userEmail) return res.status(401).json({ message: 'Unauthorized: missing user email' });
 
-  //Validate the items array
-  const {items = []} = req.body;
-  if (!Array.isArray(items) || items.length === 0) {
-    return res.status(400).json({ message: 'Invoice must contain at least one item' });
+  try {
+    const { items, subtotal, taxAmount, total } = calculateInvoiceAmounts(req.body.items, taxRate);
+
+    const newInvoice = {
+      id: uuidv4(),
+      email: userEmail,
+      items,
+      taxRate,
+      subtotal,
+      taxAmount,
+      totalAmount: total,
+      status: 'Draft',
+      createdAt: new Date().toISOString(),
+    };
+
+    const invoices = _getInvoicesArray();
+    invoices.push(newInvoice);
+    memoryStore.set('invoices', invoices);
+
+    res.status(201).json(newInvoice);
+  } catch (err) {
+    if (err && typeof err.message === 'string') {
+      if (err.message === 'items_required') return res.status(400).json({ message: 'At least one item is required to create an invoice' });
+      if (err.message.startsWith('invalid_')) return res.status(400).json({ message: `Invalid item data: ${err.message}` });
+    }
+    return res.status(400).json({ message: 'Invalid request data' });
+  }
+}
+
+// PUT /invoices/:id - update invoice line items and recalculate amounts; must be owner
+async function updateInvoice(req, res) {
+  const userEmail = req.user && req.user.email;
+  if (!userEmail) return res.status(401).json({ message: 'Unauthorized: missing user email' });
+
+  const invoiceId = req.params.id;
+  const invoices = _getInvoicesArray();
+  const idx = invoices.findIndex(inv => String(inv.id) === String(invoiceId));
+
+  if (idx === -1) return res.status(404).json({ message: 'Invoice not found' });
+
+  const invoice = invoices[idx];
+  if (invoice.email !== userEmail) return res.status(403).json({ message: 'Forbidden: access denied' });
+
+  const invoiceStatus = invoice.status;
+  if (invoiceStatus === 'Paid' || invoiceStatus === 'Cancelled' || invoiceStatus === 'Sent') {
+    return res.status(400).json({ message: `Cannot update an invoice with status '${invoiceStatus}'` });
   }
 
-  let subtotal = 0;
+  // Determine tax rate: prefer invoice-specific rate, then environment default, then fallback to 7
+  const envTaxRate = Number(process.env.DEFAULT_TAX_RATE);
+  const invoiceTaxRate = Number.isFinite(Number(invoice.taxRate)) ? Number(invoice.taxRate) : undefined;
+  const taxRate = invoiceTaxRate !== undefined ? invoiceTaxRate : (Number.isFinite(envTaxRate) ? envTaxRate : 7);
 
-  for(let item of req.body.items){
-    let {itemCode, itemName, description, category, unitPrice, quantity} = item;
+  try {
+    const { items, subtotal, taxAmount, total } = calculateInvoiceAmounts(req.body.items, taxRate);
 
-    if(typeof unitPrice !== 'number' || unitPrice < 0){
-        return res.status(400).json({ message: `Item ${itemCode} - ${itemName} has invalid unit price` });
+    invoice.items = items;
+    invoice.subtotal = subtotal;
+    invoice.taxAmount = taxAmount;
+    invoice.totalAmount = total;
+    invoice.updatedAt = new Date().toISOString();
+
+    invoices[idx] = invoice;
+    memoryStore.set('invoices', invoices);
+
+    res.json(invoice);
+  } catch (err) {
+    if (err && typeof err.message === 'string') {
+      if (err.message === 'items_required') return res.status(400).json({ message: 'At least one item is required to update the invoice' });
+      if (err.message.startsWith('invalid_')) return res.status(400).json({ message: `Invalid item data: ${err.message}` });
     }
-
-    if(typeof quantity !== 'number' || quantity <= 0){
-        return res.status(400).json({ message: `Item ${itemCode} - ${itemName} has invalid quantity` });
-    }
-
-    //Amount calculation should be done server side
-    //Per-Line Rounding Strategy
-    item.amount = Math.round(unitPrice * quantity,2);
-
-    subtotal += item.amount;
+    return res.status(400).json({ message: 'Invalid request data' });
   }
-  
-  const taxAmount = Math.round(subtotal * (taxRate/100),2);
-  const totalAmountWithTax = subtotal + taxAmount;
+}
 
-  //Basic template for invoice. Will be expanded later
-  const newInvoice = {
-    id: uuidv4(),
-    email: userEmail,
-    items: req.body.items || [],
-    taxRate,
-    taxAmount, 
-    subtotal,
-    totalAmount : totalAmountWithTax,
-    status: 'Draft',
-    createdAt: new Date().toISOString(),
-  };
+async function changeStatus(req, res) {
+  const invoiceId = req.params.id;
+  const { status } = req.body;
+  const userEmail = req.user && req.user.email;
+
+  if (!userEmail) return res.status(401).json({ message: 'Unauthorized: missing user email' });
 
   const invoices = _getInvoicesArray();
-  invoices.push(newInvoice);
+  const invoiceIndex = invoices.findIndex(inv => String(inv.id) === String(invoiceId));
+
+  if (invoiceIndex === -1) return res.status(404).json({ message: 'Invoice not found' });
+
+  if (invoices[invoiceIndex].email !== userEmail) {
+    return res.status(403).json({ message: 'Forbidden: access denied' });
+  }
+
+  if(!checkStatus(status)){
+    return res.status(400).json({ message: `Invalid status value: ${status}` });
+  }
+
+  let validationError = validateStatusChange(invoices[invoiceIndex].status, status);
+
+  if(validationError){
+    return res.status(400).json({ message: validationError });
+  }
+
+  invoices[invoiceIndex].status = status;
+  invoices[invoiceIndex].updatedAt = new Date().toISOString();
+  
   memoryStore.set('invoices', invoices);
 
-  res.status(201).json(newInvoice);
+  res.json(invoices[invoiceIndex]);
+}
+
+function checkStatus(status){
+    const validStatuses = ['Draft', 'Sent', 'Paid', 'Cancelled'];
+    return validStatuses.includes(status);
+}
+
+function validateStatusChange(currentStatus, newStatus){
+    let statusTransitions = {
+        "Draft": ["Sent", "Cancelled"],
+        "Sent": ["Paid", "Cancelled"],
+        "Paid": [],
+        "Cancelled": []
+    }
+
+    let invalidStatusChange = !statusTransitions[currentStatus].includes(newStatus);
+    if(currentStatus === newStatus){
+        return `Invoice is already in '${currentStatus}' status`;
+    }
+
+    if(invalidStatusChange){
+        return `Invalid status change from '${currentStatus}' to '${newStatus}'`;
+    }
+
+    return null;
 }
 
 module.exports = {
   getInvoices,
   getInvoice,
-  createInvoice
+  createInvoice,
+  updateInvoice,
+  changeStatus
 };
