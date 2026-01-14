@@ -1,4 +1,4 @@
-const store = require('./memory-store');
+const store = require('../memory-store');
 const jsonwebtoken = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 

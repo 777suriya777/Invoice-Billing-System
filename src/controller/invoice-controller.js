@@ -1,4 +1,4 @@
-const memoryStore = require('../../memory-store');
+const memoryStore = require('../memory-store');
 const { v4: uuidv4 } = require('uuid');
 const {calculateInvoiceAmounts} = require('../utils/Math.js')
 
