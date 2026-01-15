@@ -3,6 +3,7 @@ const express = require('express');
 const authRouter = require('./routes/auth-routes.js');
 const invoiceRouter = require('./routes/invoice-routes.js');
 const paymentRouter = require('./routes/payment-routes.js');
+const reportRouter = require('./routes/report-routes.js');
 const cors = require('cors');
 
 const port = process.env.PORT || 3000;
@@ -19,12 +20,14 @@ app.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK', message: 'Server is healthy' });
 });
 
-// Mount auth routes (public)
+// Route handlers
 app.use('/auth', authRouter);
 
 app.use('/invoices', invoiceRouter);
 
 app.use('/payments', paymentRouter);
+
+app.use('/report', reportRouter);
 
 // Start the server
 app.listen(port, () => {
