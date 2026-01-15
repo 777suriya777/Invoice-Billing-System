@@ -2,6 +2,7 @@ require('dotenv').config({override: true});
 const express = require('express');
 const authRouter = require('./routes/auth-routes.js');
 const invoiceRouter = require('./routes/invoice-routes.js');
+const paymentRouter = require('./routes/payment-routes.js');
 const cors = require('cors');
 
 const port = process.env.PORT || 3000;
@@ -23,6 +24,9 @@ app.use('/auth', authRouter);
 
 app.use('/invoices', invoiceRouter);
 
+app.use('/payments', paymentRouter);
+
+// Start the server
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });

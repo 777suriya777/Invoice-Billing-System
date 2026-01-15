@@ -46,4 +46,4 @@ function calculateInvoiceAmounts(items, taxRate) {
   };
 }
 
-modules.export = {_roundTwo, calculateInvoiceAmounts};
+module.exports = {_roundTwo, calculateInvoiceAmounts};

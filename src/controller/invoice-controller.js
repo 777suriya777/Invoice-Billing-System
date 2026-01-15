@@ -58,6 +58,8 @@ async function createInvoice(req, res) {
       taxAmount,
       totalAmount: total,
       status: 'Draft',
+      outstandingAmount: total,
+      payments : [],
       createdAt: new Date().toISOString(),
     };
 
@@ -90,7 +92,7 @@ async function updateInvoice(req, res) {
   if (invoice.email !== userEmail) return res.status(403).json({ message: 'Forbidden: access denied' });
 
   const invoiceStatus = invoice.status;
-  if (invoiceStatus === 'Paid' || invoiceStatus === 'Cancelled' || invoiceStatus === 'Sent') {
+  if (invoiceStatus === 'Paid' || invoiceStatus === 'Cancelled' || invoiceStatus === 'Sent' || invoiceStatus === 'Partially Paid') {
     return res.status(400).json({ message: `Cannot update an invoice with status '${invoiceStatus}'` });
   }
 
@@ -106,6 +108,8 @@ async function updateInvoice(req, res) {
     invoice.subtotal = subtotal;
     invoice.taxAmount = taxAmount;
     invoice.totalAmount = total;
+    invoice.outstandingAmount = total; // Reset outstanding amount on update
+    invoice.payments = [];
     invoice.updatedAt = new Date().toISOString();
 
     invoices[idx] = invoice;
@@ -156,16 +160,17 @@ async function changeStatus(req, res) {
 }
 
 function checkStatus(status){
-    const validStatuses = ['Draft', 'Sent', 'Paid', 'Cancelled'];
+    const validStatuses = ['Draft', 'Sent', 'Paid', 'Cancelled', 'Partially Paid'];
     return validStatuses.includes(status);
 }
 
 function validateStatusChange(currentStatus, newStatus){
     let statusTransitions = {
         "Draft": ["Sent", "Cancelled"],
-        "Sent": ["Paid", "Cancelled"],
+        "Sent": ["Paid", "Cancelled", "Partially Paid"],
         "Paid": [],
-        "Cancelled": []
+        "Cancelled": [],
+        "Partially Paid": ["Paid", "Cancelled"]
     }
 
     let invalidStatusChange = !statusTransitions[currentStatus].includes(newStatus);
