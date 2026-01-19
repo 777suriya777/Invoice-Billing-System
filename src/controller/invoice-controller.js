@@ -51,12 +51,18 @@ async function createInvoice(req, res) {
 
     const newInvoice = {
       id: uuidv4(),
+      clientName: req.body.clientName,
+      clientAddress: req.body.clientAddress,
+      invoiceDate: req.body.invoiceate,
+      dueDate: req.body.dueDate,
       email: userEmail,
       items,
       taxRate,
       subtotal,
       taxAmount,
       totalAmount: total,
+      invoiceDate : req.body.invoiceDate,
+      dueDate : req.body.dueDate,
       status: 'Draft',
       outstandingAmount: total,
       payments : [],
@@ -104,6 +110,10 @@ async function updateInvoice(req, res) {
   try {
     const { items, subtotal, taxAmount, total } = calculateInvoiceAmounts(req.body.items, taxRate);
 
+    invoice.clientName = req.body.clientName || invoice.clientName;
+    invoice.clientAddress = req.body.clientAddress || invoice.clientAddress;
+    invoice.invoiceDate = req.body.invoiceDate || invoice.invoiceDate;
+    invoice.dueDate = req.body.dueDate || invoice.dueDate;
     invoice.items = items;
     invoice.subtotal = subtotal;
     invoice.taxAmount = taxAmount;
