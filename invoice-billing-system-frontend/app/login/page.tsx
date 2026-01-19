@@ -32,7 +32,7 @@ export default function LoginPage(){
             else{
                 console.log('Login successful');
                 const data = await response.json();
-                localStorage.setItem('token', data.token);
+                localStorage.setItem('token', data.accessToken);
                 router.push('/dashboard');
             }
         } catch (err : unknown) {
