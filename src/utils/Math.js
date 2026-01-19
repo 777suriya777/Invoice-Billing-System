@@ -10,7 +10,7 @@ function calculateInvoiceAmounts(items, taxRate) {
   }
 
   const computedItems = items.map((item, index) => {
-    const itemCode = item.itemCode;
+    const itemCode = item.itemCode || '';
     const itemName = item.itemName || '';
 
     const unitPrice = Number(item.unitPrice);
