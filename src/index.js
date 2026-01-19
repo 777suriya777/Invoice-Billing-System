@@ -10,7 +10,7 @@ const port = process.env.PORT || 3000;
 
 const app = express();
 
-app.use(cors({methods: ['GET', 'POST'], origin: ['http://localhost:5500','http://127.0.0.1:5500']}));
+app.use(cors({methods: ['GET', 'POST', 'PATCH', 'PUT'], origin: ['http://localhost:5500','http://127.0.0.1:5500']}));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
