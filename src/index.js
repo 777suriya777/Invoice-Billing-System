@@ -4,6 +4,8 @@ const authRouter = require('./routes/auth-routes.js');
 const invoiceRouter = require('./routes/invoice-routes.js');
 const paymentRouter = require('./routes/payment-routes.js');
 const reportRouter = require('./routes/report-routes.js');
+const itemRouter = require('./routes/item-routes.js');
+const customerRouter = require('./routes/customer-routes.js');
 const cors = require('cors');
 
 const port = process.env.PORT || 3000;
@@ -28,6 +30,10 @@ app.use('/invoices', invoiceRouter);
 app.use('/payments', paymentRouter);
 
 app.use('/report', reportRouter);
+
+app.use('/items', itemRouter);
+
+app.use('/customers', customerRouter);
 
 // Start the server
 app.listen(port, () => {
