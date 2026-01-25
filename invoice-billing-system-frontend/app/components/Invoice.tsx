@@ -1,5 +1,3 @@
-import React from "react";
-
 interface InvoiceItem {
   itemName: string;
   unitPrice: number;
