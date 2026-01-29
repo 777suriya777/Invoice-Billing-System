@@ -1,4 +1,4 @@
-const memoryStore = require('../memory-store');
+import memoryStore from '../memory-store.js';
 
 function _getCustomerArray(){
     let customers = memoryStore.get('customers');
@@ -34,4 +34,4 @@ async function createCustomer(req,res){
     }
 }
 
-module.exports = {getCustomers, createCustomer};
+export {getCustomers, createCustomer};

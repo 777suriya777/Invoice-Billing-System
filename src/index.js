@@ -1,12 +1,12 @@
-require('dotenv').config({override: true});
-const express = require('express');
-const authRouter = require('./routes/auth-routes.js');
-const invoiceRouter = require('./routes/invoice-routes.js');
-const paymentRouter = require('./routes/payment-routes.js');
-const reportRouter = require('./routes/report-routes.js');
-const itemRouter = require('./routes/item-routes.js');
-const customerRouter = require('./routes/customer-routes.js');
-const cors = require('cors');
+import 'dotenv/config.js';
+import express from 'express';
+import authRouter from './routes/auth-routes.js';
+import invoiceRouter from './routes/invoice-routes.js';
+import paymentRouter from './routes/payment-routes.js';
+import reportRouter from './routes/report-routes.js';
+import itemRouter from './routes/item-routes.js';
+import customerRouter from './routes/customer-routes.js';
+import cors from 'cors';
 
 const port = process.env.PORT || 3000;
 

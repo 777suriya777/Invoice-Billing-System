@@ -1,6 +1,6 @@
-const memoryStore = require('../memory-store');
-const { v4: uuidv4 } = require('uuid');
-const {calculateInvoiceAmounts} = require('../utils/Math.js')
+import memoryStore from '../memory-store.js';
+import { v4 as uuidv4 } from 'uuid';
+import { calculateInvoiceAmounts } from '../utils/Math.js'
 
 // Helper to initialize and return the invoices array in memory store
 function _getInvoicesArray() {
@@ -195,7 +195,7 @@ function validateStatusChange(currentStatus, newStatus){
     return null;
 }
 
-module.exports = {
+export {
   getInvoices,
   getInvoice,
   createInvoice,

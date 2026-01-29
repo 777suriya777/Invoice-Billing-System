@@ -1,5 +1,5 @@
-const express = require('express');
-const jsonwebtoken = require('jsonwebtoken');
+import express from 'express';
+import jsonwebtoken from 'jsonwebtoken';
 
 // Authentication middleware
 function authenticateUser(req, res, next) {
@@ -25,4 +25,4 @@ function authenticateUser(req, res, next) {
     }
 }
 
-module.exports = authenticateUser;
+export default authenticateUser;

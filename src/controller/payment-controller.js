@@ -1,6 +1,6 @@
-const memoryStore = require('../memory-store.js');
-const { v4: uuidv4 } = require('uuid');
-const { _roundTwo } = require('../utils/Math.js');
+import memoryStore from '../memory-store.js';
+import { v4 as uuidv4 } from 'uuid';
+import { _roundTwo } from '../utils/Math.js';
 
 const allowedPaymentMethods = ['Card', 'Bank Transfer', 'UPI', 'Cash'];
 
@@ -84,7 +84,7 @@ function getPaymentForAnInvoice(req, res) {
     return res.status(200).json({ paymentInfo });
 }
 
-module.exports = {
+export {
   makePaymentForAnInvoice,
   getPaymentForAnInvoice
 };

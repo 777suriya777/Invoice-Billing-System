@@ -1,4 +1,4 @@
-const memoryStore = require('../memory-store.js');
+import memoryStore from '../memory-store.js';
 
 function getReport(req, res) {
     const userEmail = req.user && req.user.email;
@@ -37,4 +37,4 @@ function getReport(req, res) {
     res.json(report);
 }
 
-module.exports = { getReport };
+export { getReport };

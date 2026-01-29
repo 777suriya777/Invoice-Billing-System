@@ -1,6 +1,6 @@
 const map = new Map();
 
-module.exports = {
+export default {
   get(key) {
     return map.get(key);
   },

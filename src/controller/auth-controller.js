@@ -1,6 +1,6 @@
-const store = require('../memory-store');
-const jsonwebtoken = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
+import store from '../memory-store.js';
+import jsonwebtoken from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
 
 function generateAccessToken(email) {
     const secret = process.env.JWT_SECRET || 'default_secret_key';
@@ -57,5 +57,5 @@ function RegisterUser(req, res) {
     }
 }
 
-module.exports = { RegisterUser, LoginUser };
+export { RegisterUser, LoginUser };
 

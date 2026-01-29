@@ -1,10 +1,11 @@
-const express = require('express');
+import express from 'express';
+import { makePaymentForAnInvoice, getPaymentForAnInvoice } from '../controller/payment-controller.js';
+import authMiddleware from '../middleware/auth-middleware.js';
+
 const router = express.Router();
-const {makePaymentForAnInvoice, getPaymentForAnInvoice} = require('../controller/payment-controller.js');
-const authMiddleware = require('../middleware/auth-middleware.js');
 
 // POST /payments - process a payment for an invoice
 router.post('/:id', authMiddleware, makePaymentForAnInvoice);
 router.get('/:id', authMiddleware, getPaymentForAnInvoice);
 
-module.exports = router;
+export default router;
