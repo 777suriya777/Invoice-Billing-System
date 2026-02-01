@@ -14,7 +14,7 @@ export default function CreateCustomerPage(){
     const [success, setSuccess] = useState(false);
 
     async function createCustomer(){
-        const requestBody = {name, address, email, isActive: true};
+        const requestBody = {name, address, email};
         const response = await authFetch('http://localhost:3000/customers',{method:'POST',body:JSON.stringify(requestBody)})
         if(!response.ok){
             setError(`Failed to create Customer.`);
