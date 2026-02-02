@@ -7,13 +7,19 @@ import reportRouter from './routes/report-routes.js';
 import itemRouter from './routes/item-routes.js';
 import customerRouter from './routes/customer-routes.js';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 
 const port = process.env.PORT || 3000;
 
 const app = express();
 
-app.use(cors({methods: ['GET', 'POST', 'PATCH', 'PUT'], origin: ['http://localhost:5500','http://127.0.0.1:5500']}));
+app.use(cors({
+  methods: ['GET', 'POST', 'PATCH', 'PUT'],
+  origin: ['http://localhost:5500', 'http://127.0.0.1:5500'],
+  credentials: true
+}));
 
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
