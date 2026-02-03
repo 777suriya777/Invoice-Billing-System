@@ -52,9 +52,9 @@ function makePaymentForAnInvoice(req, res) {
     const paymentInfo = {
         id: uuidv4(),
         amount: amount,
-        method: paymentMethod || 'Unknown',
+        paymentMethod: paymentMethod || 'Unknown',
         createdBy: userEmail,
-        paidAt: new Date().toISOString()
+        paymentDate: new Date().toISOString()
     };
     invoices[invoiceIndex].payments.push(paymentInfo);
 

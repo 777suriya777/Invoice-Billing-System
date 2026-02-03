@@ -10,7 +10,6 @@ function calculateInvoiceAmounts(items, taxRate) {
   }
 
   const computedItems = items.map((item, index) => {
-    const itemCode = item.itemCode || '';
     const itemName = item.itemName || '';
 
     const unitPrice = Number(item.unitPrice);
@@ -34,13 +33,13 @@ function calculateInvoiceAmounts(items, taxRate) {
     };
   });
 
-  const subtotal = _roundTwo(computedItems.reduce((s, it) => s + it.amount, 0));
-  const taxAmount = _roundTwo(subtotal * (taxRate / 100));
-  const total = _roundTwo(subtotal + taxAmount);
+  const subTotal = _roundTwo(computedItems.reduce((s, it) => s + it.amount, 0));
+  const taxAmount = _roundTwo(subTotal * (taxRate / 100));
+  const total = _roundTwo(subTotal + taxAmount);
 
   return {
     items: computedItems,
-    subtotal,
+    subTotal,
     taxAmount,
     total
   };
