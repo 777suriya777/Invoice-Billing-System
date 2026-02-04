@@ -1,22 +1,23 @@
 async function authFetch(url: string, options: RequestInit = {}) {
-    const token = localStorage.getItem('token');
-
-    if(!token){
-        throw new Error('No authentication token found');
-    }
+    // 1. We no longer need to get the token from localStorage
     
     const headers = {
-        ...(options.headers || {}),
         'Content-Type': 'application/json',
-        'Authorization': token ? `Bearer ${token}` : '',
+        ...(options.headers || {}),
     };
 
     const response = await fetch(url, {
         ...options,
         headers,
+        credentials: 'include', 
     });
 
     if (!response.ok) {
+        // Handle 401 Unauthorized specifically (e.g., redirect to login)
+        if (response.status === 401) {
+            throw new Error('UNAUTHORIZED');
+        }
+        
         const errData = await response.json().catch(() => ({}));
         throw new Error(errData.message || 'Request failed');
     }

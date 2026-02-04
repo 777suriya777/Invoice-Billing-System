@@ -2,6 +2,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 export default function RegisterPage(){
+    const [firstName,setFirstName ] = useState('');
+    const [lastName,setLastName ] = useState('');
     const [email,setEmail ] = useState('');
     const [password,setPassword ] = useState('');
     const [error, setError ] = useState('');
@@ -11,6 +13,8 @@ export default function RegisterPage(){
         event.preventDefault();
         
         const reqestBody = {
+            firstName,
+            lastName,
             email,
             password
         };
@@ -23,16 +27,15 @@ export default function RegisterPage(){
                 headers: {
                     'Content-Type': 'application/json',
                 },
+                credentials: 'include',
                 body: JSON.stringify(reqestBody),
             });
 
             if (!response.ok) {
-                throw new Error('Login failed');
+                throw new Error('Registration failed');
             }
             else{
-                console.log('Login successful');
                 const data = await response.json();
-                localStorage.setItem('token', data.accessToken);
                 router.push('/dashboard');
             }
         } catch (err : unknown) {
@@ -44,6 +47,12 @@ export default function RegisterPage(){
             <h1>Register</h1>
             {error && <p style={{ color: 'red' }}>{error}</p>}
             <form onSubmit={handleSubmit}>
+                <label htmlFor="firstName">First Name</label>
+                <input type="text" name="firstName" required onChange = {(e) => setFirstName(e.target.value)}/>
+                <br />
+                <label htmlFor="lastName">Last Name</label>
+                <input type="text" name="lastName"  onChange = {(e) => setLastName(e.target.value)}/>
+                <br />
                 <label htmlFor="email">Email</label>
                 <input type="email" name="email" required onChange = {(e) => setEmail(e.target.value)}/>
                 <br />

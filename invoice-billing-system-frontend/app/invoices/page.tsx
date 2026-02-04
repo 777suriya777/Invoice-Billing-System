@@ -27,7 +27,7 @@ export default function InvoicesPage(){
         .catch((err : unknown) => {
             const message = (err as Error).message;
             setError(message);
-            if(message.includes('Unauthorized') || message.includes('token')) {
+            if(message.includes('UNAUTHORIZED') || message.includes('token')) {
                 router.push('/login');
             }
         })

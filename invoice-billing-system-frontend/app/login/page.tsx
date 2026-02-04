@@ -23,6 +23,7 @@ export default function LoginPage(){
                 headers: {
                     'Content-Type': 'application/json',
                 },
+                credentials: 'include',
                 body: JSON.stringify(reqestBody),
             });
 
@@ -32,7 +33,6 @@ export default function LoginPage(){
             else{
                 console.log('Login successful');
                 const data = await response.json();
-                localStorage.setItem('token', data.accessToken);
                 router.push('/dashboard');
             }
         } catch (err : unknown) {
