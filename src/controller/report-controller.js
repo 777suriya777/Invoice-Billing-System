@@ -1,40 +1,42 @@
-import memoryStore from '../memory-store.js';
+import { getInvoicesByUserFromRepo } from "../repository/invoice-repository";
 
-function getReport(req, res) {
-    const userEmail = req.user && req.user.email;
+async function getReport(req, res) {
+    const userEmail = req.user?.email;
 
-    if (!userEmail) return res.status(401).json({ message: 'Unauthorized: missing user email' });
+    if (!userEmail) return res.status(401).json({ message: 'Unauthorized' });
 
-    const invoices = memoryStore.get('invoices') || [];
-    const userInvoices = invoices.filter(inv => inv.email === userEmail);
+    const invoices = await getInvoicesByUserFromRepo(userEmail);
 
-    const unpaidInvoices = userInvoices.filter((inv) => inv.status === 'Sent');
-    const paidInvoices = userInvoices.filter((inv) => inv.status === 'Paid');
-    const partiallyPaidInvoices = userInvoices.filter((inv) => inv.status === 'Partially Paid');
+    const unpaidInvoices = invoices.filter((inv) => inv.status === 'Sent');
+    const paidInvoices = invoices.filter((inv) => inv.status === 'Paid');
+    const partiallyPaidInvoices = invoices.filter((inv) => inv.status === 'Partially Paid');
 
-    const totalInvoices = userInvoices.length;
+    const billableInvoices = invoices.filter(inv =>
+        inv.status !== 'Draft' && inv.status !== 'Cancelled'
+    );
 
-    const totalAmountBilled = userInvoices.filter(inv => ['Sent', 'Partially Paid','Paid'].includes(inv.status))
-                                            .reduce((sum, inv) => sum + (inv.totalAmount || 0), 0);
-
-    const totalRevenue = userInvoices.reduce((sum, inv) => {
-        const payments = inv.payments || [];
-        return sum + payments.reduce((pSum, p) => pSum + (p.amount || 0), 0);
+    const totalAmountBilled = billableInvoices.reduce((sum, inv) => {
+        return sum + Number(inv.totalAmount || 0);
     }, 0);
 
-    const totalOutstandingAmount = userInvoices.reduce((sum, inv) => sum + (inv.outstandingAmount || 0), 0);
+    const totalRevenue = invoices.reduce((sum, inv) => {
+        const paymentTotal = (inv.payments || []).reduce((pSum, p) => pSum + Number(p.amount || 0), 0);
+        return sum + paymentTotal;
+    }, 0);
 
-    const report = {
-        totalInvoices,
+    const totalOutstandingAmount = invoices.reduce((sum, inv) => {
+        return sum + Number(inv.outStandingAmount || 0);
+    }, 0);
+
+    res.json({
+        totalInvoices: invoices.length,
         unpaidInvoices,
         paidInvoices,
         partiallyPaidInvoices,
         totalAmountBilled,
         totalRevenue,
         totalOutstandingAmount
-    };
-
-    res.json(report);
+    });
 }
 
 export { getReport };

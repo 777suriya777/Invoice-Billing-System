@@ -19,7 +19,8 @@ export const getInvoicesByUserFromRepo = async (email) => {
         where: { email },
         orderBy : { createdAt: "desc" },
         include: {
-            items: true
+            items: true,
+            payments: true
         }
     });
 }
