@@ -29,7 +29,8 @@ export const getInvoiceByIdFromRepo = async (id, email) => {
     return await prisma.invoice.findUnique({
         where: { id, email },
         include: {
-            items: true
+            items: true,
+            payments: true
         }
     });
 }
