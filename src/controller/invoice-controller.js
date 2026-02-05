@@ -1,17 +1,5 @@
-import memoryStore from '../memory-store.js';
 import { calculateInvoiceAmounts } from '../utils/Math.js'
 import { createInvoiceInRepo, getInvoiceByIdFromRepo, getInvoicesByUserFromRepo, updateInvoiceStatusInRepo } from '../repository/invoice-repository.js';
-
-// Helper to initialize and return the invoices array in memory store
-function _getInvoicesArray() {
-  let invoices = memoryStore.get('invoices');
-  if (!Array.isArray(invoices)) {
-    invoices = [];
-    memoryStore.set('invoices', invoices);
-  }
-  return invoices;
-}
-
 // GET /invoices - return invoices belonging to the authenticated user
 async function getInvoices(req, res) {
   const userEmail = req.user && req.user.email;
@@ -23,7 +11,7 @@ async function getInvoices(req, res) {
 
 // GET /invoices/:id - return the invoice only if it belongs to the authenticated user
 async function getInvoice(req, res) {
-  const invoiceId = req.params.id;
+  const invoiceId = parseInt(req.params.id);
   const userEmail = req.user && req.user.email;
   if (!userEmail) return res.status(401).json({ message: 'Unauthorized: missing user email' });
   const invoice = await getInvoiceByIdFromRepo(invoiceId, userEmail);
@@ -74,7 +62,7 @@ async function createInvoice(req, res) {
 
 async function changeStatus(req, res) {
   try {
-    const invoiceId = req.params.id;
+    const invoiceId = parseInt(req.params.id);
     const { status } = req.body;
     const userEmail = req.user && req.user.email;
 
