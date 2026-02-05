@@ -51,7 +51,7 @@ export default function InvoiceDetailsPage() {
         setLoading(false);
         return;
       }
-      setInvoice(data);
+      fetchInvoice();
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -73,7 +73,7 @@ export default function InvoiceDetailsPage() {
 
       if (
         paymentAmount <= 0 ||
-        paymentAmount > invoice.outstandingAmount ||
+        paymentAmount > invoice.outStandingAmount ||
         paymentMethod === ""
       ) {
         if (paymentMethod === "")
@@ -147,7 +147,7 @@ export default function InvoiceDetailsPage() {
             </tr>
           </thead>
           <tbody>
-            {invoice.items.map((item: any, index: number) => {
+            {(invoice.items || []).map((item: any, index: number) => {
               return (
                 <tr key={index}>
                   <td>{item.itemName}</td>
@@ -183,7 +183,7 @@ export default function InvoiceDetailsPage() {
             {validationError && (
               <p style={{ color: "red" }}>{validationError}</p>
             )}
-            <p>Outstanding Balance : {invoice.outstandingAmount}</p>
+            <p>Outstanding Balance : {invoice.outStandingAmount}</p>
             <input
               type="number"
               placeholder="Payment amount"
@@ -203,32 +203,33 @@ export default function InvoiceDetailsPage() {
             <button onClick={makePayment} disabled={loading}>
               Pay
             </button>
-            {invoice.payments.length > 0 && (
-              <div className="payment-history">
-                <br />
-                <h3>Payment History</h3>
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Amount</th>
-                      <th> Payment Method</th>
-                      <th>Created By</th>
-                      <th>Paid At</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {invoice.payments.map((paymentInfo: any, index: number) => (
-                      <tr key={index}>
-                        <td>{paymentInfo.amount}</td>
-                        <td>{paymentInfo.method}</td>
-                        <td>{paymentInfo.createdBy}</td>
-                        <td>{paymentInfo.paidAt}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+          </div>
+        )}
+
+        {(invoice.payments || []).length > 0 && (
+          <div className="payment-history">
+            <br />
+            <h3>Payment History</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Amount</th>
+                  <th> Payment Method</th>
+                  <th>Created By</th>
+                  <th>Paid At</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(invoice.payments || []).map((paymentInfo: any, index: number) => (
+                  <tr key={index}>
+                    <td>{paymentInfo.amount}</td>
+                    <td>{paymentInfo.method}</td>
+                    <td>{paymentInfo.createdBy}</td>
+                    <td>{paymentInfo.createdAt}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
