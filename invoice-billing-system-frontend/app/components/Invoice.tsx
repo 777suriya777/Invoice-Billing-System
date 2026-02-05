@@ -23,7 +23,7 @@ export interface InvoiceData {
   subTotal: number;
   taxAmount: number;
   totalAmount: number | string;
-  outstandingAmount: number | string;
+  outStandingAmount: number | string;
   createdAt: string;
   updatedAt : string;
   payments?: Payment[];
@@ -91,7 +91,7 @@ const Invoice = ({ data } : InvoiceProps) => {
         </div>
         <div>
           <span>Outstanding Balance:</span>
-          <span>{data.outstandingAmount}</span>
+          <span>{data.outStandingAmount}</span>
         </div>
       </section>
 
