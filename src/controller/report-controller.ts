@@ -1,22 +1,20 @@
 import { getInvoicesByUserFromRepo } from "../repository/invoice-repository";
-import { Request, Response } from 'express';
-
-async function getReport(req: Request, res: Response): Promise<void> {
+import { Request, Response } from 'express';import { INVOICE_STATUS } from '../constants/invoiceStatus';
+async function getReport(req: Request, res: Response): Promise<Response> {
     const userEmail = (req.user as any)?.email;
 
     if (!userEmail) {
-        res.status(401).json({ message: 'Unauthorized' });
-        return;
+        return res.status(401).json({ message: 'Unauthorized' });
     }
 
     const invoices = await getInvoicesByUserFromRepo(userEmail);
 
-    const unpaidInvoices = invoices.filter((inv: any) => inv.status === 'Sent');
-    const paidInvoices = invoices.filter((inv: any) => inv.status === 'Paid');
-    const partiallyPaidInvoices = invoices.filter((inv: any) => inv.status === 'Partially Paid');
+    const unpaidInvoices = invoices.filter((inv: any) => inv.status === INVOICE_STATUS.SENT);
+    const paidInvoices = invoices.filter((inv: any) => inv.status === INVOICE_STATUS.PAID);
+    const partiallyPaidInvoices = invoices.filter((inv: any) => inv.status === INVOICE_STATUS.PARTIALLY_PAID);
 
     const billableInvoices = invoices.filter(inv =>
-        inv.status !== 'Draft' && inv.status !== 'Cancelled'
+        inv.status !== INVOICE_STATUS.DRAFT && inv.status !== INVOICE_STATUS.CANCELLED
     );
 
     const totalAmountBilled = billableInvoices.reduce((sum: number, inv: any) => {
@@ -32,7 +30,7 @@ async function getReport(req: Request, res: Response): Promise<void> {
         return sum + Number(inv.outStandingAmount || 0);
     }, 0);
 
-    res.json({
+    return res.json({
         totalInvoices: invoices.length,
         unpaidInvoices,
         paidInvoices,

@@ -1,4 +1,5 @@
 import { prisma } from '../lib/prisma';
+import { INVOICE_STATUS } from '../constants/invoiceStatus';
 
 interface CreatePaymentData {
     invoiceId: number;
@@ -14,7 +15,7 @@ export const createPaymetnInRepo = async ({ invoiceId, paymentMethod, amount, cr
             throw new Error('Invoice not found');
         }
 
-        if (invoice.status === 'Paid') {
+        if (invoice.status === INVOICE_STATUS.PAID) {
             throw new Error('Invoice already paid');
         }
 
@@ -37,7 +38,7 @@ export const createPaymetnInRepo = async ({ invoiceId, paymentMethod, amount, cr
             where: { id: invoiceId },
             data: {
                 outStandingAmount: newOutstandingAmount,
-                status: newOutstandingAmount === 0 ? 'Paid' : 'Partially Paid',
+                status: newOutstandingAmount === 0 ? INVOICE_STATUS.PAID : INVOICE_STATUS.PARTIALLY_PAID,
             },
         });
 

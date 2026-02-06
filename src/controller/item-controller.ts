@@ -1,5 +1,6 @@
 import { getItemsByUserFromRepo, createItemInRepo } from '../repository/item-repository';
 import { Request, Response } from 'express';
+import { CreateItemSchema } from '../validators/item.schema';
 
 interface CreateItemBody {
     itemName: string;
@@ -18,10 +19,11 @@ async function createItem(req: Request, res: Response): Promise<Response> {
     try{
         const user = (req.user as any)?.email;
         if(!user) return res.status(401).json({message : 'Unauthorized: missing user email'});
-        const {itemName, description, unitPrice} = req.body as CreateItemBody;
-        if (!itemName || !description || !unitPrice) {
-            return res.status(400).json({ message: 'Missing required item fields: itemName, description, unitPrice' });
+        const parsed = CreateItemSchema.safeParse(req.body);
+        if (!parsed.success) {
+            return res.status(400).json({ message: 'Validation failed', errors: parsed.error.format() });
         }
+        const { itemName, description, unitPrice } = parsed.data as CreateItemBody;
         const item = {itemName, description, unitPrice, createdBy : user};
         await createItemInRepo(item);
         return res.status(201).json({message : `Item ${item.itemName} is created succesfully`});
