@@ -1,16 +1,17 @@
-import { hasUserWithEmail, createUser, getUserByEmail } from '../repository/auth-repository.js';
+import { hasUserWithEmail, createUser, getUserByEmail } from '../repository/auth-repository';
 import jsonwebtoken from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
+import { Request, Response } from 'express';
 
 // Constant-time comparison to prevent timing attacks
-const constantTimeCompare = async (inputPassword, storedHash) => {
+const constantTimeCompare = async (inputPassword: string, storedHash: string | null): Promise<boolean> => {
     // Always compare (even with dummy hash for non-existent users)
     const dummyHash = '$2b$10$dummyhashforsecuritytiming00000000';
     const hashToCompare = storedHash || dummyHash;
     return await bcrypt.compare(inputPassword, hashToCompare);
 };
 
-const setCookie = (res, name, value) => {
+const setCookie = (res: Response, name: string, value: string): void => {
     res.cookie(name, value, {
             httpOnly : true,
             secure : process.env.NODE_ENV === 'production',
@@ -19,20 +20,34 @@ const setCookie = (res, name, value) => {
         });
 }
 
-function generateAccessToken(user) {
+interface UserPayload {
+    sub: number;
+    email: string;
+    firstName: string;
+    lastName: string | null;
+}
+
+interface UserData {
+    id: number;
+    email: string;
+    firstName: string;
+    lastName: string | null;
+}
+
+function generateAccessToken(user: UserData): string {
     const secret = process.env.JWT_SECRET;
     if (!secret) {
         throw new Error('JWT_SECRET is not configured');
     }
     
-    const payload = {
+    const payload: UserPayload = {
         sub: user.id,
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName
     };
     
-    const options = { 
+    const options: any = { 
         expiresIn: process.env.JWT_EXPIRY || '15m', 
         issuer: 'invoice-billing-system' 
     };
@@ -40,7 +55,7 @@ function generateAccessToken(user) {
     return jsonwebtoken.sign(payload, secret, options);
 }
 
-async function LoginUser(req, res) {
+async function LoginUser(req: Request, res: Response): Promise<Response> {
     const { email, password } = req.body;
     
     if (!email || !password) { 
@@ -80,7 +95,7 @@ async function LoginUser(req, res) {
     }
 }
 
-async function RegisterUser(req, res) {
+async function RegisterUser(req: Request, res: Response): Promise<Response> {
     const { firstName, lastName, email, password } = req.body;
     
     // Validate all required fields
@@ -113,7 +128,7 @@ async function RegisterUser(req, res) {
         }
         
         // Hash password
-        const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 10;
+        const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS || '10');
         const hashedPassword = await bcrypt.hash(password, saltRounds);
         
         // Create user with additional default fields
@@ -139,7 +154,8 @@ async function RegisterUser(req, res) {
         console.error('Registration error:', err);
         
         // Handle specific Prisma errors
-        if (err.code === 'P2002') {
+        const prismaError = err as any;
+        if (prismaError?.code === 'P2002') {
             return res.status(409).json({ message: 'User already exists' });
         }
         

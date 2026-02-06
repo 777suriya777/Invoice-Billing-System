@@ -1,11 +1,11 @@
 import 'dotenv/config.js';
-import express from 'express';
-import authRouter from './routes/auth-routes.js';
-import invoiceRouter from './routes/invoice-routes.js';
-import paymentRouter from './routes/payment-routes.js';
-import reportRouter from './routes/report-routes.js';
-import itemRouter from './routes/item-routes.js';
-import customerRouter from './routes/customer-routes.js';
+import express, { Request, Response } from 'express';
+import authRouter from './routes/auth-routes';
+import invoiceRouter from './routes/invoice-routes';
+import paymentRouter from './routes/payment-routes';
+import reportRouter from './routes/report-routes';
+import itemRouter from './routes/item-routes';
+import customerRouter from './routes/customer-routes';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 
@@ -24,7 +24,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Health check endpoint
-app.get('/health', (req, res) => {
+app.get('/health', (req: Request, res: Response) => {
   res.status(200).json({ status: 'OK', message: 'Server is healthy' });
 });
 

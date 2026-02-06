@@ -1,6 +1,27 @@
-import { prisma } from '../lib/prisma.ts';
+import { prisma } from '../lib/prisma';
 
-export const createUser = async (data) => {
+interface CreateUserData {
+    firstName: string;
+    lastName: string | null;
+    email: string;
+    password: string;
+}
+
+interface UserSelect {
+    id: true;
+    email: true;
+    firstName: true;
+    lastName: true;
+    isActive: true;
+}
+
+interface PasswordHashResult {
+    id: string;
+    password: string;
+    isActive: boolean;
+}
+
+export const createUser = async (data: CreateUserData) => {
     return await prisma.user.create({ 
         data,
         select: {
@@ -13,7 +34,7 @@ export const createUser = async (data) => {
     });
 }
 
-export const getUserByEmail = async (email) => {
+export const getUserByEmail = async (email: string) => {
     return await prisma.user.findUnique({ 
         where: { email },
         select: {
@@ -27,7 +48,7 @@ export const getUserByEmail = async (email) => {
     });
 }
 
-export const deleteUserByEmail = async (email) => {
+export const deleteUserByEmail = async (email: string) => {
     return await prisma.user.delete({ 
         where: { email },
         select: {
@@ -37,7 +58,7 @@ export const deleteUserByEmail = async (email) => {
     });
 }
 
-export const updateUserPassword = async (email, newPassword) => {
+export const updateUserPassword = async (email: string, newPassword: string) => {
     return await prisma.user.update({
         where: { email },
         data: { password: newPassword },
@@ -48,7 +69,7 @@ export const updateUserPassword = async (email, newPassword) => {
     });
 }
 
-export const hasUserWithEmail = async (email) => {
+export const hasUserWithEmail = async (email: string): Promise<boolean> => {
     const user = await prisma.user.findUnique({ 
         where: { email },
         select: { id: true }
@@ -56,7 +77,7 @@ export const hasUserWithEmail = async (email) => {
     return !!user;
 }
 
-export const getPasswordHashByEmail = async (email) => {
+export const getPasswordHashByEmail = async (email: string) => {
     const user = await prisma.user.findUnique({ 
         where: { email },
         select: { 

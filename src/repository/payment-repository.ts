@@ -1,6 +1,13 @@
-import { prisma } from '../lib/prisma.ts';
+import { prisma } from '../lib/prisma';
 
-export const createPaymetnInRepo = async ({ invoiceId, paymentMethod, amount, createdBy }) => {
+interface CreatePaymentData {
+    invoiceId: number;
+    paymentMethod: string;
+    amount: number;
+    createdBy: string;
+}
+
+export const createPaymetnInRepo = async ({ invoiceId, paymentMethod, amount, createdBy }: CreatePaymentData) => {
     return await prisma.$transaction(async (tx) => {
         const invoice = await tx.invoice.findFirst({ where: { id: invoiceId } });
         if (!invoice) {
@@ -11,7 +18,7 @@ export const createPaymetnInRepo = async ({ invoiceId, paymentMethod, amount, cr
             throw new Error('Invoice already paid');
         }
 
-        const newOutstandingAmount = invoice.outStandingAmount - amount;
+        const newOutstandingAmount = Number(invoice.outStandingAmount) - amount;
 
         if (newOutstandingAmount < 0) {
             throw new Error('Overpayment is not allowed');
@@ -41,7 +48,7 @@ export const createPaymetnInRepo = async ({ invoiceId, paymentMethod, amount, cr
     });
 }
 
-export const getPaymentsByInvoiceIdFromRepo = async (invoiceId, userEmail) => {
+export const getPaymentsByInvoiceIdFromRepo = async (invoiceId: number, userEmail: string) => {
     const payments = await prisma.payment.findMany({
         where: {
             invoiceId, 
