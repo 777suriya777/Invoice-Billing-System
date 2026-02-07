@@ -20,15 +20,19 @@ interface CreateInvoiceBody {
 }
 
 // GET /invoices - return invoices belonging to the authenticated user
-async function getInvoices(req: Request, res: Response): Promise<void> {
-  const userEmail = (req.user as any)?.email;
+async function getInvoices(req: Request, res: Response): Promise<Response> {
+  try{
+    const userEmail = (req.user as any)?.email;
   if (!userEmail) {
-    res.status(401).json({ message: 'Unauthorized: missing user email' });
-    return;
+    return res.status(401).json({ message: 'Unauthorized: missing user email' });
   }
 
   const invoices = await getInvoicesByUserFromRepo(userEmail);
-  res.json(invoices);
+  return res.json(invoices);
+}
+  catch(err){
+    return res.status(500).json({message: (err as Error).message});
+  }
 }
 
 // GET /invoices/:id - return the invoice only if it belongs to the authenticated user
