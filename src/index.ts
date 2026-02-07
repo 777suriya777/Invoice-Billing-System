@@ -41,7 +41,11 @@ app.use('/items', itemRouter);
 
 app.use('/customers', customerRouter);
 
-// Start the server
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
+// Start the server only when not running tests
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+  });
+}
+
+export default app;
