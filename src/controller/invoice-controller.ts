@@ -27,7 +27,11 @@ async function getInvoices(req: Request, res: Response): Promise<Response> {
     return res.status(401).json({ message: 'Unauthorized: missing user email' });
   }
 
-  const invoices = await getInvoicesByUserFromRepo(userEmail);
+  const MAX_PAGE_SIZE = 50;
+  const page = Number(req.query.page || 1);
+  const pageSize = Math.min(Number(req.query.pageSize || 10), MAX_PAGE_SIZE);
+
+  const invoices = await getInvoicesByUserFromRepo(userEmail,page,pageSize);
   return res.json(invoices);
 }
   catch(err){

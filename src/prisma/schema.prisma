@@ -22,6 +22,8 @@ model Customer {
   createdBy String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([email])
 }
 
 model Item{
@@ -33,6 +35,8 @@ model Item{
   createdBy String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([createdBy])
 }
 
 model User{
@@ -64,6 +68,9 @@ model Invoice{
   createdBy String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@index([createdAt])
 }
 
 model InvoiceItem{
@@ -91,4 +98,6 @@ model Payment{
   updatedAt DateTime @updatedAt
 
   invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
 }
