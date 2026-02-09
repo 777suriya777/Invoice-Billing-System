@@ -7,7 +7,7 @@ async function getReport(req: Request, res: Response): Promise<Response> {
         return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    const invoices = await getInvoicesByUserFromRepo(userEmail);
+    const invoices = (await getInvoicesByUserFromRepo(userEmail)).data;
 
     const unpaidInvoices = invoices.filter((inv: any) => inv.status === INVOICE_STATUS.SENT);
     const paidInvoices = invoices.filter((inv: any) => inv.status === INVOICE_STATUS.PAID);

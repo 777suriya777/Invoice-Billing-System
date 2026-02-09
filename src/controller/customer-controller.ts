@@ -9,13 +9,6 @@ async function getCustomers(req: Request, res: Response): Promise<Response> {
     return res.json(customers);
 }
 
-interface CreateCustomerBody {
-    name: string;
-    address: string;
-    email: string;
-    isActive?: boolean;
-}
-
 async function createCustomer(req: Request, res: Response): Promise<Response> {
     try{
         const user = (req.user as any)?.email;
