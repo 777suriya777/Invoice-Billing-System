@@ -8,6 +8,7 @@ import itemRouter from './routes/item-routes';
 import customerRouter from './routes/customer-routes';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
 
 const port = process.env.PORT || 3000;
 
@@ -20,6 +21,7 @@ app.use(cors({
 }));
 
 app.use(cookieParser());
+app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
