@@ -95,8 +95,12 @@ export const getInvoiceByIdFromRepo = async (id: number, email: string) => {
 }
 
 export const updateInvoiceStatusInRepo = async (id: number, email: string, status: string) => {
-    return await prisma.invoice.updateMany({
+    return await prisma.invoice.update({
         where: { id, email },
-        data: { status }
+        data: { status },
+        include: {
+            items: true,
+            payments: true
+        }
     });
 }

@@ -1,41 +1,43 @@
 import { calculateInvoiceAmounts } from '../utils/Math'
 import { createInvoiceInRepo, getInvoiceByIdFromRepo, getInvoicesByUserFromRepo, updateInvoiceStatusInRepo } from '../repository/invoice-repository';
+import { generateInvoicePDF } from '../services/invoice-pdf.services';
 import { Request, Response } from 'express';
 import { CreateInvoiceSchema } from '../validators/invoice.schema';
 import { INVOICE_STATUS } from '../constants/invoiceStatus';
+import { sendEmailService } from '../services/email.services';
 
 interface InvoiceItemInput {
-    itemName: string;
-    description?: string;
-    unitPrice: number;
-    quantity: number;
+  itemName: string;
+  description?: string;
+  unitPrice: number;
+  quantity: number;
 }
 
 interface CreateInvoiceBody {
-    clientName: string;
-    clientAddress: string;
-    items: InvoiceItemInput[];
-    invoiceDate: string;
-    dueDate: string;
+  clientName: string;
+  clientAddress: string;
+  items: InvoiceItemInput[];
+  invoiceDate: string;
+  dueDate: string;
 }
 
 // GET /invoices - return invoices belonging to the authenticated user
 async function getInvoices(req: Request, res: Response): Promise<Response> {
-  try{
+  try {
     const userEmail = (req.user as any)?.email;
-  if (!userEmail) {
-    return res.status(401).json({ message: 'Unauthorized: missing user email' });
+    if (!userEmail) {
+      return res.status(401).json({ message: 'Unauthorized: missing user email' });
+    }
+
+    const MAX_PAGE_SIZE = 50;
+    const page = Number(req.query.page || 1);
+    const pageSize = Math.min(Number(req.query.pageSize || 10), MAX_PAGE_SIZE);
+
+    const invoices = (await getInvoicesByUserFromRepo(userEmail, page, pageSize)).data;
+    return res.json(invoices);
   }
-
-  const MAX_PAGE_SIZE = 50;
-  const page = Number(req.query.page || 1);
-  const pageSize = Math.min(Number(req.query.pageSize || 10), MAX_PAGE_SIZE);
-
-  const invoices = (await getInvoicesByUserFromRepo(userEmail,page,pageSize)).data;
-  return res.json(invoices);
-}
-  catch(err){
-    return res.status(500).json({message: (err as Error).message});
+  catch (err) {
+    return res.status(500).json({ message: (err as Error).message });
   }
 }
 
@@ -121,15 +123,38 @@ async function changeStatus(req: Request, res: Response): Promise<Response> {
       return res.status(400).json({ message: `Invalid status value: ${status}` });
     }
 
+    const existingInvoice = await getInvoiceByIdFromRepo(invoiceId, userEmail);
+    if (!existingInvoice) {
+      return res.status(404).json({ message: 'Invoice not found' });
+    }
+
+    console.log(existingInvoice);
+
+    const transitionError = validateStatusChange(existingInvoice.status, status);
+    if (transitionError) {
+      return res.status(400).json({ message: transitionError });
+    }
+
     const updatedInvoice = await updateInvoiceStatusInRepo(
-      invoiceId, 
-      userEmail, 
+      invoiceId,
+      userEmail,
       status
     );
 
-    if (!updatedInvoice) {
-      return res.status(404).json({ message: 'Invoice not found' });
+    if (status === INVOICE_STATUS.SENT) {
+      try {
+        const pdfBuffer = await generateInvoicePDF(updatedInvoice);
+
+        await sendEmailService(
+          updatedInvoice.email,
+          updatedInvoice.id,
+          pdfBuffer,
+        );
+      } catch (emailErr) {
+        console.error('Invoice email failed:', emailErr);
+      }
     }
+
 
     return res.json(updatedInvoice);
   } catch (err) {
@@ -163,9 +188,30 @@ function validateStatusChange(currentStatus: string, newStatus: string): string 
   return null;
 }
 
+async function downloadInvoicePDF(req: Request, res: Response) {
+  const invoiceId = Number(req.params.id);
+  const userEmail = (req.user as any).email;
+
+  const invoice = await getInvoiceByIdFromRepo(invoiceId, userEmail);
+  if (!invoice) {
+    return res.status(404).json({ message: 'Invoice not found' });
+  }
+
+  const pdfBuffer = await generateInvoicePDF(invoice);
+
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader(
+    'Content-Disposition',
+    `attachment; filename=invoice-${invoiceId}.pdf`
+  );
+
+  res.send(pdfBuffer);
+}
+
 export {
   getInvoices,
   getInvoice,
   createInvoice,
-  changeStatus
+  changeStatus,
+  downloadInvoicePDF
 };
