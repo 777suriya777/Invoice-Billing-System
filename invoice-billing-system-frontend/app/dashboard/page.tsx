@@ -1,5 +1,4 @@
 "use client";
-import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import authFetch from "@/lib/authFetch";
 import Invoice, { InvoiceData } from "../components/Invoice";
@@ -26,7 +25,7 @@ export default function DashboardPage() {
       const response = await authFetch("http://localhost:3000/report", {
         method: "GET",
       });
-      const data = await response.json().catch(() => {});
+      const data = await response.json().catch(() => { });
 
       if (!response.ok) {
         setError(data.message);
