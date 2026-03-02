@@ -1,5 +1,5 @@
 import { getInvoicesByUserFromRepo } from "../repository/invoice-repository";
-import { Request, Response } from 'express';import { INVOICE_STATUS } from '../constants/invoiceStatus';
+import { Request, Response } from 'express'; import { INVOICE_STATUS } from '../constants/invoiceStatus';
 async function getReport(req: Request, res: Response): Promise<Response> {
     const userEmail = (req.user as any)?.email;
 
@@ -13,7 +13,7 @@ async function getReport(req: Request, res: Response): Promise<Response> {
     const paidInvoices = invoices.filter((inv: any) => inv.status === INVOICE_STATUS.PAID);
     const partiallyPaidInvoices = invoices.filter((inv: any) => inv.status === INVOICE_STATUS.PARTIALLY_PAID);
 
-    const billableInvoices = invoices.filter(inv =>
+    const billableInvoices = invoices.filter((inv: any) =>
         inv.status !== INVOICE_STATUS.DRAFT && inv.status !== INVOICE_STATUS.CANCELLED
     );
 

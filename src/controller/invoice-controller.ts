@@ -30,7 +30,7 @@ async function getInvoices(req: Request, res: Response): Promise<Response> {
     }
 
     const MAX_PAGE_SIZE = 50;
-    const page = Number(req.query.page || 1);
+    const page = Math.max(1, Number(req.query.page || 1));
     const pageSize = Math.min(Number(req.query.pageSize || 10), MAX_PAGE_SIZE);
 
     const invoices = (await getInvoicesByUserFromRepo(userEmail, page, pageSize)).data;
@@ -44,6 +44,10 @@ async function getInvoices(req: Request, res: Response): Promise<Response> {
 // GET /invoices/:id - return the invoice only if it belongs to the authenticated user
 async function getInvoice(req: Request, res: Response): Promise<void> {
   const invoiceId = parseInt(req.params.id as string);
+  if (isNaN(invoiceId)) {
+    res.status(400).json({ message: 'Invalid invoice ID' });
+    return;
+  }
   const userEmail = (req.user as any)?.email;
   if (!userEmail) {
     res.status(401).json({ message: 'Unauthorized: missing user email' });
@@ -112,6 +116,9 @@ async function createInvoice(req: Request, res: Response): Promise<Response> {
 async function changeStatus(req: Request, res: Response): Promise<Response> {
   try {
     const invoiceId = parseInt(req.params.id as string);
+    if (isNaN(invoiceId)) {
+      return res.status(400).json({ message: 'Invalid invoice ID' });
+    }
     const { status } = req.body;
     const userEmail = (req.user as any)?.email;
 
@@ -170,19 +177,21 @@ function checkStatus(status: string): boolean {
 function validateStatusChange(currentStatus: string, newStatus: string): string | null {
   const statusTransitions: Record<string, string[]> = {
     [INVOICE_STATUS.DRAFT]: [INVOICE_STATUS.SENT, INVOICE_STATUS.CANCELLED],
-    [INVOICE_STATUS.SENT]: [INVOICE_STATUS.PAID, INVOICE_STATUS.CANCELLED, INVOICE_STATUS.PARTIALLY_PAID],
+    [INVOICE_STATUS.SENT]: [INVOICE_STATUS.CANCELLED],
     [INVOICE_STATUS.PAID]: [],
     [INVOICE_STATUS.CANCELLED]: [],
-    [INVOICE_STATUS.PARTIALLY_PAID]: [INVOICE_STATUS.PAID, INVOICE_STATUS.CANCELLED]
+    [INVOICE_STATUS.PARTIALLY_PAID]: [INVOICE_STATUS.CANCELLED]
   }
 
-  const invalidStatusChange = !statusTransitions[currentStatus].includes(newStatus);
+  const allowedTransitions = statusTransitions[currentStatus] || [];
+  const invalidStatusChange = !allowedTransitions.includes(newStatus);
+
   if (currentStatus === newStatus) {
     return `Invoice is already in '${currentStatus}' status`;
   }
 
   if (invalidStatusChange) {
-    return `Invalid status change from '${currentStatus}' to '${newStatus}'`;
+    return `Invalid status change from '${currentStatus}' to '${newStatus}'. Manual transition applies only to Send or Cancelled states.`;
   }
 
   return null;
@@ -190,6 +199,9 @@ function validateStatusChange(currentStatus: string, newStatus: string): string 
 
 async function downloadInvoicePDF(req: Request, res: Response) {
   const invoiceId = Number(req.params.id);
+  if (isNaN(invoiceId)) {
+    return res.status(400).json({ message: 'Invalid invoice ID' });
+  }
   const userEmail = (req.user as any).email;
 
   const invoice = await getInvoiceByIdFromRepo(invoiceId, userEmail);

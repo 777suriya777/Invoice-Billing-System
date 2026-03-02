@@ -11,6 +11,10 @@ interface MakePaymentBody {
 async function makePaymentForAnInvoice(req: Request, res: Response): Promise<Response> {
     const userEmail = (req.user as any)?.email;
     const invoiceId = parseInt(req.params.id as string);
+    if (isNaN(invoiceId)) {
+        return res.status(400).json({ message: 'Invalid invoice ID' });
+    }
+
     const validation = MakePaymentSchema.safeParse(req.body);
     if (!validation.success) {
         return res.status(400).json({ message: 'Validation failed', errors: validation.error.format() });
@@ -38,6 +42,9 @@ async function makePaymentForAnInvoice(req: Request, res: Response): Promise<Res
 
 async function getPaymentForAnInvoice(req: Request, res: Response): Promise<Response> {
     const invoiceId = parseInt(req.params.id as string);
+    if (isNaN(invoiceId)) {
+        return res.status(400).json({ message: 'Invalid invoice ID' });
+    }
     const userEmail = (req.user as any)?.email;
 
     if (!userEmail) {
