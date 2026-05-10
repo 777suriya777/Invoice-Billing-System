@@ -1,3 +1,6 @@
+import Link from 'next/link';
+import Badge from './Badge';
+
 interface InvoiceItem {
   itemName: string;
   unitPrice: number;
@@ -13,97 +16,63 @@ interface Payment {
 }
 
 export interface InvoiceData {
+  id?: string | number;
   clientName: string;
   clientAddress: string;
   invoiceDate: string;
   dueDate: string;
-  email: string;
-  items: InvoiceItem[];
-  taxRate: number;
-  subTotal: number;
-  taxAmount: number;
+  email?: string;
+  items?: InvoiceItem[];
+  taxRate?: number;
+  subTotal?: number;
+  taxAmount?: number;
   totalAmount: number | string;
   outStandingAmount: number | string;
-  createdAt: string;
-  updatedAt : string;
+  status?: string;
+  createdAt?: string;
+  updatedAt?: string;
   payments?: Payment[];
 }
 
-interface InvoiceProps{
-    data : InvoiceData;
-}
-
-const Invoice = ({ data } : InvoiceProps) => {
-  // Guard clause in case data is still loading
+export default function Invoice({ data }: { data: InvoiceData }) {
   if (!data) return null;
 
+  const total = Number(data.totalAmount);
+  const outstanding = Number(data.outStandingAmount);
+
   return (
-    <div className="invoice-wrapper">
-      {/* Header Info */}
-      <header>
-        <div className="client-info">
-          <h1>Invoice</h1>
-          <p>Client: {data.clientName}</p>
-          <p>Address: {data.clientAddress}</p>
+    <div className="flex items-center justify-between px-4 py-3 hover:bg-slate-50 rounded-lg transition-colors group">
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <p className="text-sm font-semibold text-slate-800 truncate">{data.clientName}</p>
+          {data.status && <Badge status={data.status} />}
         </div>
+        <p className="text-xs text-slate-400 mt-0.5">
+          Issued {data.invoiceDate}
+          {data.dueDate ? ` · Due ${data.dueDate}` : ''}
+        </p>
+      </div>
 
-        <div className="invoice-meta">
-          <p>Date: {data.invoiceDate}</p>
-          <p>Due Date: {data.dueDate}</p>
+      <div className="ml-4 flex items-center gap-5 flex-shrink-0">
+        <div className="text-right">
+          <p className="text-sm font-semibold text-slate-900">
+            {isNaN(total) ? String(data.totalAmount) : `₹${total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`}
+          </p>
+          {outstanding > 0 && (
+            <p className="text-xs text-amber-600 font-medium">
+              ₹{outstanding.toLocaleString('en-IN', { minimumFractionDigits: 2 })} outstanding
+            </p>
+          )}
         </div>
-      </header>
-
-      {/* Items Table */}
-      <table>
-        <thead>
-          <tr>
-            <th>Item Description</th>
-            <th>Qty</th>
-            <th>Unit Price</th>
-            <th>Amount</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.items?.map((item: any, index: number) => (
-            <tr key={index}>
-              <td>{item.itemName}</td>
-              <td>{item.quantity}</td>
-              <td>{item.unitPrice}</td>
-              <td>{(item.quantity * item.unitPrice).toFixed(2)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      {/* Summary Section */}
-      <section className="invoice-summary">
-        <div>
-          <span>Subtotal:</span>
-          <span>{data.subTotal}</span>
-        </div>
-        <div>
-          <span>Tax:</span>
-          <span>{data.taxAmount}</span>
-        </div>
-        <div>
-          <strong>Total Amount:</strong>
-          <strong>{data.totalAmount}</strong>
-        </div>
-        <div>
-          <span>Outstanding Balance:</span>
-          <span>{data.outStandingAmount}</span>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer>
-        <p>Last Updated: {data.updatedAt}</p>
-        {data.payments && data.payments?.length > 0 && (
-          <p>Payments recorded: {data.payments.length}</p>
+        {data.id && (
+          <Link
+            href={`/invoices/${data.id}`}
+            className="text-xs text-indigo-600 hover:text-indigo-700 font-medium opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap"
+          >
+            View →
+          </Link>
         )}
-      </footer>
+      </div>
     </div>
   );
-};
-
-export default Invoice;
+}
